@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:read_zone/services/auth_service.dart';
 import 'package:read_zone/services/book_service.dart';
 import '../components/navbar.dart';
+import 'dart:typed_data';
 
 class HomePage extends StatefulWidget {
   @override
@@ -160,8 +161,19 @@ class _HomePageState extends State<HomePage> {
       leading: SizedBox(
         width: 50,
         height: 70,
-        child: book.coverUrl.isNotEmpty
-            ? Image.network(book.coverUrl, fit: BoxFit.cover)
+        child: book.cover != null
+            ? FutureBuilder<Widget>(
+          future: _loadImage(book.cover!),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Container(color: Colors.grey);
+            } else {
+              return snapshot.data!;
+            }
+          },
+        )
             : Container(color: Colors.grey),
       ),
       title: Text(book.title, style: TextStyle(color: Colors.black)),
@@ -171,5 +183,9 @@ class _HomePageState extends State<HomePage> {
         // Navigate to book details or action
       },
     );
+  }
+
+  Future<Widget> _loadImage(Uint8List imageData) async {
+    return Image.memory(imageData, fit: BoxFit.cover);
   }
 }

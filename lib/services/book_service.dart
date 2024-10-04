@@ -1,6 +1,7 @@
 import 'package:open_library/models/ol_search_doc_model.dart';
 import 'package:open_library/models/ol_search_model.dart';
 import 'package:open_library/open_library.dart';
+import 'dart:typed_data';
 
 class BookService {
   final OpenLibrary _openLibrary = OpenLibrary();
@@ -20,15 +21,15 @@ class BookService {
 class Book {
   final String title;
   final String author;
-  final String coverUrl;
+  final Uint8List? cover;
 
-  Book({required this.title, required this.author, required this.coverUrl});
+  Book({required this.title, required this.author, this.cover});
 
   factory Book.fromDoc(OLSearchDoc doc) {
     return Book(
       title: doc.title ?? 'No Title',
       author: (doc.authors != null && doc.authors!.isNotEmpty) ? doc.authors![0].name : 'Unknown Author',
-      coverUrl: doc.covers != null && doc.covers!.isNotEmpty ? 'https://covers.openlibrary.org/b/id/${doc.covers![0]}-L.jpg' : '',
+      cover: doc.covers != null && doc.covers!.isNotEmpty ? doc.covers![0] : null,
     );
   }
 }
