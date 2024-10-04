@@ -6,9 +6,11 @@ import 'dart:typed_data';
 class BookService {
   final OpenLibrary _openLibrary = OpenLibrary();
 
-  Future<List<Book>> fetchBooks(String query, {int limit = 10}) async {
-    final OLSearchBase result = await _openLibrary.query(q: query, limit: limit);
-    print('Fetching books for query: $query, limit: $limit');
+  Future<List<Book>> fetchBooks(String query, {int limit = 10, int page = 1}) async {
+    // Include pagination information in the query string
+    final String paginatedQuery = '$query&page=$page';
+    final OLSearchBase result = await _openLibrary.query(q: paginatedQuery, limit: limit);
+    print('Fetching books for query: $query, limit: $limit, page: $page');
 
     if (result is OLSearch && result.docs != null) {
       return result.docs!.map((doc) => Book.fromDoc(doc)).toList();

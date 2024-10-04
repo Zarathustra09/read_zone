@@ -15,6 +15,8 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 2; // Set Home as the initial selected index
   List<Book> _books = [];
   bool _isLoading = true;
+  int _currentPage = 1;
+  final int _limit = 10;
 
   @override
   void initState() {
@@ -23,8 +25,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _fetchBooks() async {
+    setState(() {
+      _isLoading = true;
+    });
     try {
-      final books = await _bookService.fetchBooks('flutter');
+      final books = await _bookService.fetchBooks('flutter', limit: _limit, page: _currentPage);
       setState(() {
         _books = books;
         _isLoading = false;
@@ -34,6 +39,22 @@ class _HomePageState extends State<HomePage> {
         _isLoading = false;
       });
       // Handle error
+    }
+  }
+
+  void _nextPage() {
+    setState(() {
+      _currentPage++;
+    });
+    _fetchBooks();
+  }
+
+  void _previousPage() {
+    if (_currentPage > 1) {
+      setState(() {
+        _currentPage--;
+      });
+      _fetchBooks();
     }
   }
 
@@ -119,6 +140,21 @@ class _HomePageState extends State<HomePage> {
               ),
               SizedBox(height: 10),
               _buildBookRecommendations(),
+
+              // Pagination Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton(
+                    onPressed: _previousPage,
+                    child: Text('<'),
+                  ),
+                  ElevatedButton(
+                    onPressed: _nextPage,
+                    child: Text('>'),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -150,8 +186,13 @@ class _HomePageState extends State<HomePage> {
 
   // Helper function to build the book recommendations section
   Widget _buildBookRecommendations() {
-    return Column(
-      children: _books.map((book) => _buildBookTile(book)).toList(),
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      itemCount: _books.length,
+      itemBuilder: (context, index) {
+        return _buildBookTile(_books[index]);
+      },
     );
   }
 
