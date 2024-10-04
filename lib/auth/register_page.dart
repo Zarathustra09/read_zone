@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../services/auth_service.dart';
+
 class RegisterPage extends StatefulWidget {
   @override
   _RegisterPageState createState() => _RegisterPageState();
@@ -10,7 +12,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController(); // Added
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +29,10 @@ class _RegisterPageState extends State<RegisterPage> {
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black, // Change to black
+                  color: Colors.black,
                 ),
               ),
               SizedBox(height: 40),
-
               Card(
                 elevation: 8,
                 shape: RoundedRectangleBorder(
@@ -47,7 +49,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: _usernameController,
                           decoration: InputDecoration(
                             labelText: 'Username',
-                            prefixIcon: Icon(Icons.person, color: Colors.black), // Change to black
+                            prefixIcon: Icon(Icons.person, color: Colors.black),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -57,12 +59,11 @@ class _RegisterPageState extends State<RegisterPage> {
                           },
                         ),
                         SizedBox(height: 20),
-
                         TextFormField(
                           controller: _emailController,
                           decoration: InputDecoration(
                             labelText: 'Email',
-                            prefixIcon: Icon(Icons.email, color: Colors.black), // Change to black
+                            prefixIcon: Icon(Icons.email, color: Colors.black),
                           ),
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) {
@@ -75,12 +76,11 @@ class _RegisterPageState extends State<RegisterPage> {
                           },
                         ),
                         SizedBox(height: 20),
-
                         TextFormField(
                           controller: _passwordController,
                           decoration: InputDecoration(
                             labelText: 'Password',
-                            prefixIcon: Icon(Icons.lock, color: Colors.black), // Change to black
+                            prefixIcon: Icon(Icons.lock, color: Colors.black),
                           ),
                           obscureText: true,
                           validator: (value) {
@@ -91,13 +91,11 @@ class _RegisterPageState extends State<RegisterPage> {
                           },
                         ),
                         SizedBox(height: 20),
-
-                        // Confirm Password Field
                         TextFormField(
                           controller: _confirmPasswordController,
                           decoration: InputDecoration(
                             labelText: 'Confirm Password',
-                            prefixIcon: Icon(Icons.lock, color: Colors.black), // Change to black
+                            prefixIcon: Icon(Icons.lock, color: Colors.black),
                           ),
                           obscureText: true,
                           validator: (value) {
@@ -110,7 +108,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           },
                         ),
                         SizedBox(height: 20),
-
                         ElevatedButton(
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
@@ -118,21 +115,22 @@ class _RegisterPageState extends State<RegisterPage> {
                               final email = _emailController.text;
                               final password = _passwordController.text;
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Registration Successful!')),
+                              _authService.signup(
+                                email: email,
+                                password: password,
+                                username: username,
+                                context: context,
                               );
                             }
                           },
-                          child: Text('Register', style: TextStyle(color: Colors.black)), // Change to black
+                          child: Text('Register', style: TextStyle(color: Colors.black)),
                         ),
                         SizedBox(height: 20),
-
                         TextButton(
                           onPressed: () {
-                            // Navigate back to login page
                             Navigator.pop(context);
                           },
-                          child: Text('Already have an account? Login', style: TextStyle(color: Colors.black)), // Change to black
+                          child: Text('Already have an account? Login', style: TextStyle(color: Colors.black)),
                         ),
                       ],
                     ),

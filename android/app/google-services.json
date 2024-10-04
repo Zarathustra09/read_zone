@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "838400405205",
+    "project_id": "readzone-e39ac",
+    "storage_bucket": "readzone-e39ac.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:838400405205:android:e391e9b9570cbf068f7c5c",
+        "android_client_info": {
+          "package_name": "com.example.read_zone"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2YZvsAqy7thqKL3_FH9G2x8_9EJDXNCE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
