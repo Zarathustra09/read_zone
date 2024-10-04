@@ -3,6 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:read_zone/main_pages/home_page.dart';
 
+import '../auth/login_page.dart';
+
 class AuthService{
 
   Future<void> signup({
@@ -78,6 +80,19 @@ class AuthService{
       print('FirebaseAuthException: $message'); // Changed to print
     } catch (e) {
       print('Exception: An error occurred during sign in. Please try again.'); // Changed to print
+    }
+  }
+
+  Future<void> signout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+      );
+    } catch (e) {
+      print('An error occurred during sign out. Please try again.');
+      print('Error: $e');
     }
   }
 

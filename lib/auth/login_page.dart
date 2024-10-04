@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../theme.dart';
-import 'register_page.dart'; // Import the RegisterPage
+import 'package:read_zone/auth/register_page.dart';
+import 'package:read_zone/services/auth_service.dart';
+
+import '../theme.dart'; // Import AuthService
 
 class LoginPage extends StatefulWidget {
   @override
@@ -11,6 +13,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final AuthService _authService = AuthService(); // Create an instance of AuthService
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +35,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 SizedBox(height: 40),
-
                 Card(
                   elevation: 8,
                   shape: RoundedRectangleBorder(
@@ -62,7 +64,6 @@ class _LoginPageState extends State<LoginPage> {
                             },
                           ),
                           SizedBox(height: 20),
-
                           TextFormField(
                             controller: _passwordController,
                             decoration: InputDecoration(
@@ -78,29 +79,28 @@ class _LoginPageState extends State<LoginPage> {
                             },
                           ),
                           SizedBox(height: 20),
-
                           ElevatedButton(
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
                                 final email = _emailController.text;
                                 final password = _passwordController.text;
 
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Login Successful!')),
+                                _authService.signin(
+                                  email: email,
+                                  password: password,
+                                  context: context,
                                 );
                               }
                             },
                             child: Text('Login'), // Text color is handled by theme
                           ),
                           SizedBox(height: 20),
-
                           TextButton(
                             onPressed: () {
                               // Forgot password action
                             },
                             child: Text('Forgot Password?'),
                           ),
-
                           TextButton(
                             onPressed: () {
                               Navigator.push(

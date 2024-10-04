@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:read_zone/services/auth_service.dart';
 
 class HomePage extends StatelessWidget {
+  final AuthService _authService = AuthService();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -8,6 +11,14 @@ class HomePage extends StatelessWidget {
         title: Text('Home Page', style: TextStyle(color: Colors.black)), // Black title color
         backgroundColor: Color(0xFFE0FBE2), // Use one of the colors from your palette
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout, color: Colors.black),
+            onPressed: () {
+              _authService.signout(context);
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Column(
