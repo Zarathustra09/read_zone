@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import 'login_page.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -128,7 +129,10 @@ class _RegisterPageState extends State<RegisterPage> {
                         SizedBox(height: 20),
                         TextButton(
                           onPressed: () {
-                            Navigator.pop(context);
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => LoginPage()),
+                            );
                           },
                           child: Text('Already have an account? Login', style: TextStyle(color: Colors.black)),
                         ),
