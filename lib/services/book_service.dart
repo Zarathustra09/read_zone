@@ -112,6 +112,7 @@ class Author {
   }
 }
 
+
 class Book {
   final String key;
   final String title;
@@ -141,7 +142,7 @@ class Book {
       author: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['author']['key'] ?? 'Unknown Author' : 'Unknown Author',
       authorKey: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['author']['key'] ?? 'Unknown Author' : 'Unknown Author',
       coverUrl: coverUrl,
-      description: json['description'] ?? 'No description available',
+      description: json['description'] is Map ? json['description']['value'] : json['description'] ?? 'No description available',
     );
   }
 }
