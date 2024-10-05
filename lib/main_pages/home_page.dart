@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:read_zone/main_pages/single_page.dart';
 import 'package:read_zone/services/auth_service.dart';
 import 'package:read_zone/services/book_service.dart';
 import '../components/navbar.dart';
@@ -28,7 +29,8 @@ class _HomePageState extends State<HomePage> {
       _isLoading = true;
     });
     try {
-      final books = await _bookService.fetchBooks(query, limit: _limit, offset: (_currentPage - 1) * _limit);
+      final books = await _bookService.fetchBooks(
+          query, limit: _limit, offset: (_currentPage - 1) * _limit);
       if (mounted) {
         setState(() {
           _books = books;
@@ -209,8 +211,12 @@ class _HomePageState extends State<HomePage> {
       subtitle: Text(book.author, style: TextStyle(color: Colors.black54)),
       trailing: Icon(Icons.arrow_forward, color: Colors.black),
       onTap: () {
-        // Navigate to book details or action
-        print('Book Key: ${book.key}'); // Hidden key for internal usage
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SinglePage(bookKey: book.key),
+          ),
+        );
       },
     );
   }

@@ -24,6 +24,26 @@ class BookService {
       throw Exception('Failed to load books');
     }
   }
+
+  Future<Book> fetchBookByKey(String key) async {
+    final String url = 'https://openlibrary.org/$key.json';
+    final headers = {
+      'User-Agent': 'read_zone/1.0 (joshua.pardo30@gmail.com)',
+    };
+    final uri = Uri.parse(url);
+    print('Fetching book from URL: $url');
+    final response = await http.get(uri, headers: headers);
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      return Book.fromJson(data);
+    } else {
+      throw Exception('Failed to load book');
+    }
+  }
 }
 
 class Book {
@@ -31,19 +51,27 @@ class Book {
   final String title;
   final String author;
   final String? coverUrl;
+  final String? description;
 
-  Book({required this.key, required this.title, required this.author, this.coverUrl});
+  Book({
+    required this.key,
+    required this.title,
+    required this.author,
+    this.coverUrl,
+    this.description,
+  });
 
   factory Book.fromJson(Map<String, dynamic> json) {
     String? coverUrl;
-    if (json['cover_id'] != null) {
-      coverUrl = 'https://covers.openlibrary.org/b/id/${json['cover_id']}-S.jpg';
+    if (json['covers'] != null && json['covers'].isNotEmpty) {
+      coverUrl = 'https://covers.openlibrary.org/b/id/${json['covers'][0]}-L.jpg';
     }
     return Book(
       key: json['key'] ?? 'No Key',
       title: json['title'] ?? 'No Title',
-      author: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['name'] : 'Unknown Author',
+      author: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['author']['key'] : 'Unknown Author',
       coverUrl: coverUrl,
+      description: json['description'] ?? 'No description available',
     );
   }
 }
