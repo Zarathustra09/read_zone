@@ -16,7 +16,7 @@ class _HomePageState extends State<HomePage> {
   List<Book> _books = [];
   bool _isLoading = true;
   int _currentPage = 1;
-  final int _limit = 10;
+  final int _limit = 5; // Change from 10 to 5
 
   @override
   void initState() {
@@ -24,20 +24,24 @@ class _HomePageState extends State<HomePage> {
     _fetchBooks();
   }
 
-  void _fetchBooks() async {
+  void _fetchBooks([String query = 'Psychology']) async {
     setState(() {
       _isLoading = true;
     });
     try {
-      final books = await _bookService.fetchBooks('flutter', limit: _limit, page: _currentPage);
-      setState(() {
-        _books = books;
-        _isLoading = false;
-      });
+      final books = await _bookService.fetchBooks(query, limit: _limit, page: _currentPage);
+      if (mounted) {
+        setState(() {
+          _books = books;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
       // Handle error
     }
   }
