@@ -14,11 +14,15 @@ class BookService {
       'offset': offset.toString(),
     };
     final uri = Uri.parse(url).replace(queryParameters: queryParameters);
+
+    // Print statement to log the URL being fetched
+    print('Fetching books from URL: $uri');
+
     final response = await http.get(uri, headers: headers);
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
-      final List<dynamic> works = data['works'];
+      final List<dynamic> works = data['works']; // Correctly access the 'works' key
       return works.map((work) => Book.fromJson(work)).toList();
     } else {
       throw Exception('Failed to load books');
@@ -44,12 +48,75 @@ class BookService {
       throw Exception('Failed to load book');
     }
   }
+
+  Future<List<Book>> fetchAuthorWorks(String authorKey) async {
+    final String url = 'https://openlibrary.org/$authorKey/works.json';
+    final headers = {
+      'User-Agent': 'read_zone/1.0 (joshua.pardo30@gmail.com)',
+    };
+    final uri = Uri.parse(url);
+    print('Fetching works for author from URL: $url');
+    final response = await http.get(uri, headers: headers);
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      final List<dynamic> entries = data['entries'];
+      final List<Book> books = entries
+          .where((entry) => entry['authors'].any((author) => author['author']['key'] == authorKey))
+          .map((entry) => Book.fromJson(entry))
+          .toList();
+      return books;
+    } else {
+      throw Exception('Failed to load author works');
+    }
+  }
+
+  Future<Author> fetchAuthorByKey(String authorKey) async {
+    final String url = 'https://openlibrary.org/$authorKey.json';
+    final headers = {
+      'User-Agent': 'read_zone/1.0 (joshua.pardo30@gmail.com)',
+    };
+    final uri = Uri.parse(url);
+    print('Fetching author from URL: $url');
+    final response = await http.get(uri, headers: headers);
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      return Author.fromJson(data);
+    } else {
+      throw Exception('Failed to load author');
+    }
+  }
+}
+
+class Author {
+  final String key;
+  final String name;
+
+  Author({
+    required this.key,
+    required this.name,
+  });
+
+  factory Author.fromJson(Map<String, dynamic> json) {
+    return Author(
+      key: json['key'],
+      name: json['name'],
+    );
+  }
 }
 
 class Book {
   final String key;
   final String title;
   final String author;
+  final String authorKey;
   final String? coverUrl;
   final String? description;
 
@@ -57,6 +124,7 @@ class Book {
     required this.key,
     required this.title,
     required this.author,
+    required this.authorKey,
     this.coverUrl,
     this.description,
   });
@@ -66,10 +134,12 @@ class Book {
     if (json['covers'] != null && json['covers'].isNotEmpty) {
       coverUrl = 'https://covers.openlibrary.org/b/id/${json['covers'][0]}-L.jpg';
     }
+
     return Book(
       key: json['key'] ?? 'No Key',
       title: json['title'] ?? 'No Title',
-      author: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['author']['key'] : 'Unknown Author',
+      author: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['author']['key'] ?? 'Unknown Author' : 'Unknown Author',
+      authorKey: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['author']['key'] ?? 'Unknown Author' : 'Unknown Author',
       coverUrl: coverUrl,
       description: json['description'] ?? 'No description available',
     );

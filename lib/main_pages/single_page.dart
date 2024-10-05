@@ -1,7 +1,10 @@
+// lib/main_pages/single_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:read_zone/components/navbar.dart';
 import 'package:read_zone/theme.dart';
 import '../services/book_service.dart';
+import 'author_works.dart';
 
 class SinglePage extends StatefulWidget {
   final String bookKey;
@@ -14,6 +17,7 @@ class SinglePage extends StatefulWidget {
 
 class _SinglePageState extends State<SinglePage> {
   late Future<Book> _bookFuture;
+  late Future<Author> _authorFuture;
 
   @override
   void initState() {
@@ -54,6 +58,8 @@ class _SinglePageState extends State<SinglePage> {
             } else {
               final book = snapshot.data!;
               print('Book loaded: ${book.title}');
+              print('Author Key: ${book.authorKey}'); // Print the author key
+              _authorFuture = BookService().fetchAuthorByKey(book.authorKey);
               return Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -87,12 +93,55 @@ class _SinglePageState extends State<SinglePage> {
                     SizedBox(height: 10),
 
                     // Book Author
-                    Text(
-                      'by ${book.author}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.black54,
-                      ),
+                    FutureBuilder<Author>(
+                      future: _authorFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Text(
+                            'by Loading...',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black54,
+                            ),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Text(
+                            'by Unknown Author',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black54,
+                            ),
+                          );
+                        } else if (!snapshot.hasData) {
+                          return Text(
+                            'by Unknown Author',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black54,
+                            ),
+                          );
+                        } else {
+                          final author = snapshot.data!;
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AuthorWorksPage(authorKey: author.key),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              'by ${author.name}',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.black54,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          );
+                        }
+                      },
                     ),
                     SizedBox(height: 20),
 

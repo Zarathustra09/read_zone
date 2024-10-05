@@ -197,7 +197,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Helper function to build a book tile for recommendations
+  // lib/main_pages/home_page.dart
+
   Widget _buildBookTile(Book book) {
     return ListTile(
       leading: SizedBox(
