@@ -1,11 +1,50 @@
 // lib/main_pages/single_page.dart
 
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:read_zone/components/navbar.dart';
 import 'package:read_zone/theme.dart';
 import '../services/book_service.dart';
 import 'author_works.dart';
 
+// lib/main_pages/single_page.dart
+
+class SinglePageBook {
+  final String key;
+  final String title;
+  final String author;
+  final String authorKey;
+  final String? coverUrl;
+  final String? description;
+
+  SinglePageBook({
+    required this.key,
+    required this.title,
+    required this.author,
+    required this.authorKey,
+    this.coverUrl,
+    this.description,
+  });
+
+  factory SinglePageBook.fromJson(Map<String, dynamic> json) {
+    String? coverUrl;
+    if (json['cover_id'] != null) {
+      coverUrl = 'https://covers.openlibrary.org/b/id/${json['cover_id']}-L.jpg';
+    } else if (json['covers'] != null && json['covers'].isNotEmpty) {
+      coverUrl = 'https://covers.openlibrary.org/b/id/${json['covers'][0]}-L.jpg';
+    }
+
+    return SinglePageBook(
+      key: json['key'] ?? 'No Key',
+      title: json['title'] ?? 'No Title',
+      author: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['author']['key'] ?? 'Unknown Author' : 'Unknown Author',
+      authorKey: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['author']['key'] ?? 'Unknown Author' : 'Unknown Author',
+      coverUrl: coverUrl,
+      description: json['description'] is Map ? json['description']['value'] : json['description'] ?? 'No description available',
+    );
+  }
+}
 class SinglePage extends StatefulWidget {
   final String bookKey;
 
@@ -16,14 +55,34 @@ class SinglePage extends StatefulWidget {
 }
 
 class _SinglePageState extends State<SinglePage> {
-  late Future<Book> _bookFuture;
-  late Future<Author> _authorFuture;
+  late Future<SinglePageBook> _bookFuture;
+  Future<Author>? _authorFuture;
 
   @override
   void initState() {
     super.initState();
     print('Fetching book with key: ${widget.bookKey}');
-    _bookFuture = BookService().fetchBookByKey(widget.bookKey);
+    _bookFuture = _fetchBookByKey(widget.bookKey);
+  }
+
+  Future<SinglePageBook> _fetchBookByKey(String key) async {
+    final String url = 'https://openlibrary.org/$key.json';
+    final headers = {
+      'User-Agent': 'read_zone/1.0 (joshua.pardo30@gmail.com)',
+    };
+    final uri = Uri.parse(url);
+    print('Fetching book from URL: $url');
+    final response = await http.get(uri, headers: headers);
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      return SinglePageBook.fromJson(data);
+    } else {
+      throw Exception('Failed to load book');
+    }
   }
 
   Future<bool> _onWillPop() async {
@@ -43,7 +102,7 @@ class _SinglePageState extends State<SinglePage> {
           backgroundColor: AppTheme.primaryColor,
           elevation: 0,
         ),
-        body: FutureBuilder<Book>(
+        body: FutureBuilder<SinglePageBook>(
           future: _bookFuture,
           builder: (context, snapshot) {
             print('FutureBuilder state: ${snapshot.connectionState}');
@@ -59,7 +118,9 @@ class _SinglePageState extends State<SinglePage> {
               final book = snapshot.data!;
               print('Book loaded: ${book.title}');
               print('Author Key: ${book.authorKey}'); // Print the author key
-              _authorFuture = BookService().fetchAuthorByKey(book.authorKey);
+              if (book.authorKey != 'Unknown Author') {
+                _authorFuture = BookService().fetchAuthorByKey(book.authorKey);
+              }
               return Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -93,7 +154,8 @@ class _SinglePageState extends State<SinglePage> {
                     SizedBox(height: 10),
 
                     // Book Author
-                    FutureBuilder<Author>(
+                    _authorFuture != null
+                        ? FutureBuilder<Author>(
                       future: _authorFuture,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -142,6 +204,13 @@ class _SinglePageState extends State<SinglePage> {
                           );
                         }
                       },
+                    )
+                        : Text(
+                      'by Unknown Author',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.black54,
+                      ),
                     ),
                     SizedBox(height: 20),
 

@@ -132,15 +132,17 @@ class Book {
 
   factory Book.fromJson(Map<String, dynamic> json) {
     String? coverUrl;
-    if (json['covers'] != null && json['covers'].isNotEmpty) {
-      coverUrl = 'https://covers.openlibrary.org/b/id/${json['covers'][0]}-L.jpg';
+    if (json['cover_id'] != null) {
+      coverUrl = 'https://covers.openlibrary.org/b/id/${json['cover_id']}-S.jpg';
+    } else if (json['covers'] != null && json['covers'].isNotEmpty) {
+      coverUrl = 'https://covers.openlibrary.org/b/id/${json['covers'][0]}-S.jpg';
     }
 
     return Book(
       key: json['key'] ?? 'No Key',
       title: json['title'] ?? 'No Title',
-      author: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['author']['key'] ?? 'Unknown Author' : 'Unknown Author',
-      authorKey: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['author']['key'] ?? 'Unknown Author' : 'Unknown Author',
+      author: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['name'] ?? 'Unknown Author' : 'Unknown Author',
+      authorKey: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['key'] ?? 'Unknown Author' : 'Unknown Author',
       coverUrl: coverUrl,
       description: json['description'] is Map ? json['description']['value'] : json['description'] ?? 'No description available',
     );

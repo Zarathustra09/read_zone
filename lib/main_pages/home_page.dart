@@ -36,6 +36,10 @@ class _HomePageState extends State<HomePage> {
           _books = books;
           _isLoading = false;
         });
+        // Print the cover URLs to the terminal
+        for (var book in _books) {
+          print('Cover URL: ${book.coverUrl}');
+        }
       }
     } catch (e) {
       if (mounted) {
