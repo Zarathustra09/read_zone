@@ -210,6 +210,7 @@ class _HomePageState extends State<HomePage> {
       trailing: Icon(Icons.arrow_forward, color: Colors.black),
       onTap: () {
         // Navigate to book details or action
+        print('Book Key: ${book.key}'); // Hidden key for internal usage
       },
     );
   }
