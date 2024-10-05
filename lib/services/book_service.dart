@@ -1,19 +1,25 @@
-import 'package:open_library/models/ol_search_doc_model.dart';
-import 'package:open_library/models/ol_search_model.dart';
-import 'package:open_library/open_library.dart';
-import 'dart:typed_data';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class BookService {
-  final OpenLibrary _openLibrary = OpenLibrary();
+  final String _baseUrl = 'https://openlibrary.org/subjects';
 
-  Future<List<Book>> fetchBooks(String query, {int limit = 10, int page = 1}) async {
-    // Include pagination information in the query string
-    final String paginatedQuery = '$query&page=$page';
-    final OLSearchBase result = await _openLibrary.query(q: paginatedQuery, limit: limit);
-    print('Fetching books for query: $query, limit: $limit, page: $page');
+  Future<List<Book>> fetchBooks(String subject, {int limit = 10, int offset = 0}) async {
+    final String url = '$_baseUrl/$subject.json';
+    final headers = {
+      'User-Agent': 'read_zone/1.0 (joshua.pardo30@gmail.com)',
+    };
+    final queryParameters = {
+      'limit': limit.toString(),
+      'offset': offset.toString(),
+    };
+    final uri = Uri.parse(url).replace(queryParameters: queryParameters);
+    final response = await http.get(uri, headers: headers);
 
-    if (result is OLSearch && result.docs != null) {
-      return result.docs!.map((doc) => Book.fromDoc(doc)).toList();
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      final List<dynamic> works = data['works'];
+      return works.map((work) => Book.fromJson(work)).toList();
     } else {
       throw Exception('Failed to load books');
     }
@@ -23,15 +29,19 @@ class BookService {
 class Book {
   final String title;
   final String author;
-  final Uint8List? cover;
+  final String? coverUrl;
 
-  Book({required this.title, required this.author, this.cover});
+  Book({required this.title, required this.author, this.coverUrl});
 
-  factory Book.fromDoc(OLSearchDoc doc) {
+  factory Book.fromJson(Map<String, dynamic> json) {
+    String? coverUrl;
+    if (json['cover_id'] != null) {
+      coverUrl = 'https://covers.openlibrary.org/b/id/${json['cover_id']}-S.jpg';
+    }
     return Book(
-      title: doc.title ?? 'No Title',
-      author: (doc.authors != null && doc.authors!.isNotEmpty) ? doc.authors![0].name : 'Unknown Author',
-      cover: doc.covers != null && doc.covers!.isNotEmpty ? doc.covers![0] : null,
+      title: json['title'] ?? 'No Title',
+      author: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['name'] : 'Unknown Author',
+      coverUrl: coverUrl,
     );
   }
 }

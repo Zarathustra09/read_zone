@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:read_zone/services/auth_service.dart';
 import 'package:read_zone/services/book_service.dart';
 import '../components/navbar.dart';
-import 'dart:typed_data';
 
 class HomePage extends StatefulWidget {
   @override
@@ -24,12 +23,12 @@ class _HomePageState extends State<HomePage> {
     _fetchBooks();
   }
 
-  void _fetchBooks([String query = 'Psychology']) async {
+  void _fetchBooks([String query = 'love']) async {
     setState(() {
       _isLoading = true;
     });
     try {
-      final books = await _bookService.fetchBooks(query, limit: _limit, page: _currentPage);
+      final books = await _bookService.fetchBooks(query, limit: _limit, offset: (_currentPage - 1) * _limit);
       if (mounted) {
         setState(() {
           _books = books;
@@ -98,15 +97,12 @@ class _HomePageState extends State<HomePage> {
               // Search Bar
               TextField(
                 decoration: InputDecoration(
-                  hintText: 'Search books, authors...',
-                  prefixIcon: Icon(Icons.search, color: Colors.black),
-                  filled: true,
-                  fillColor: Color(0xFFBFF6C3),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
+                  hintText: 'Search...',
+                  border: OutlineInputBorder(),
                 ),
+                onSubmitted: (value) {
+                  _fetchBooks(value);
+                },
               ),
               SizedBox(height: 20),
 
@@ -127,7 +123,6 @@ class _HomePageState extends State<HomePage> {
                     _buildCategoryCard('Fiction', Icons.book),
                     _buildCategoryCard('Science', Icons.science),
                     _buildCategoryCard('History', Icons.history),
-                    _buildCategoryCard('Biography', Icons.person),
                   ],
                 ),
               ),
@@ -151,11 +146,11 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   ElevatedButton(
                     onPressed: _previousPage,
-                    child: Text('<'),
+                    child: Text('Previous'),
                   ),
                   ElevatedButton(
                     onPressed: _nextPage,
-                    child: Text('>'),
+                    child: Text('Next'),
                   ),
                 ],
               ),
@@ -206,19 +201,8 @@ class _HomePageState extends State<HomePage> {
       leading: SizedBox(
         width: 50,
         height: 70,
-        child: book.cover != null
-            ? FutureBuilder<Widget>(
-          future: _loadImage(book.cover!),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Container(color: Colors.grey);
-            } else {
-              return snapshot.data!;
-            }
-          },
-        )
+        child: book.coverUrl != null
+            ? Image.network(book.coverUrl!, fit: BoxFit.cover)
             : Container(color: Colors.grey),
       ),
       title: Text(book.title, style: TextStyle(color: Colors.black)),
@@ -228,9 +212,5 @@ class _HomePageState extends State<HomePage> {
         // Navigate to book details or action
       },
     );
-  }
-
-  Future<Widget> _loadImage(Uint8List imageData) async {
-    return Image.memory(imageData, fit: BoxFit.cover);
   }
 }
