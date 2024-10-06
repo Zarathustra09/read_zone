@@ -1,4 +1,6 @@
+// lib/components/navbar.dart
 import 'package:flutter/material.dart';
+import 'package:read_zone/main_pages/chat_page.dart'; // Import ChatPage
 
 class Navbar extends StatefulWidget {
   final int currentIndex;
@@ -43,7 +45,16 @@ class _NavbarState extends State<Navbar> {
       currentIndex: widget.currentIndex,
       selectedItemColor: Color(0xFFACE1AF), // Primary color from your palette
       unselectedItemColor: Colors.grey,
-      onTap: widget.onTap,
+      onTap: (index) {
+        if (index == 3) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ChatPage()),
+          );
+        } else {
+          widget.onTap(index);
+        }
+      },
     );
   }
 }
