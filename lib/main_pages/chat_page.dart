@@ -17,8 +17,8 @@ class _ChatPageState extends State<ChatPage> {
 
   final ChatUser _user = ChatUser(
     id: '1',
-    firstName: 'Joshua',
-    lastName: 'Pardo',
+    firstName: 'Current',
+    lastName: 'User',
   );
 
   final ChatUser _gptChatUser = ChatUser(

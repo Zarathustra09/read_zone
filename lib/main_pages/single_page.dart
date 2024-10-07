@@ -4,11 +4,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:read_zone/components/navbar.dart';
+import 'package:read_zone/main_pages/read_page.dart';
 import 'package:read_zone/theme.dart';
 import '../services/book_service.dart';
 import 'author_works.dart';
-
-// lib/main_pages/single_page.dart
 
 class SinglePageBook {
   final String key;
@@ -45,6 +44,7 @@ class SinglePageBook {
     );
   }
 }
+
 class SinglePage extends StatefulWidget {
   final String bookKey;
 
@@ -83,6 +83,84 @@ class _SinglePageState extends State<SinglePage> {
     } else {
       throw Exception('Failed to load book');
     }
+  }
+
+  Future<void> _fetchEditionsAndPrint(String key) async {
+    try {
+      final editions = await fetchEditionsByKey(key);
+      if (editions.isNotEmpty) {
+        final lastEdition = editions.last;
+        String? validIsbn;
+
+        // Check for valid ISBN-10
+        if (lastEdition.isbn10 != null) {
+          for (var isbn in lastEdition.isbn10!.reversed) {
+            if (isbn.isNotEmpty) {
+              validIsbn = isbn;
+              break;
+            }
+          }
+        }
+
+        // If no valid ISBN-10, check for valid ISBN-13
+        if (validIsbn == null && lastEdition.isbn13 != null) {
+          for (var isbn in lastEdition.isbn13!.reversed) {
+            if (isbn.isNotEmpty) {
+              validIsbn = isbn;
+              break;
+            }
+          }
+        }
+
+        if (validIsbn != null) {
+          final itemUrl = await fetchBookDetailsByISBN(validIsbn);
+          if (itemUrl != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ReadPage(
+                  title: lastEdition.title,
+                  url: itemUrl,
+                ),
+              ),
+            );
+          }
+        } else {
+          print('No valid ISBN-10 or ISBN-13 found for the last edition');
+        }
+      } else {
+        print('No editions found');
+      }
+    } catch (e) {
+      print('Error fetching editions: $e');
+    }
+  }
+
+  Future<String?> fetchBookDetailsByISBN(String isbn) async {
+    final String url = 'http://openlibrary.org/api/volumes/brief/isbn/$isbn.json';
+    final headers = {
+      'User-Agent': 'read_zone/1.0 (joshua.pardo30@gmail.com)',
+    };
+    final uri = Uri.parse(url);
+    print('Fetching book details from URL: $url');
+    final response = await http.get(uri, headers: headers);
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      if (data.containsKey('items') && data['items'].isNotEmpty) {
+        final itemUrl = data['items'][0]['itemURL'];
+        print('Item URL: $itemUrl');
+        return itemUrl;
+      } else {
+        print('No items found in the response');
+      }
+    } else {
+      print('Failed to load book details');
+    }
+    return null;
   }
 
   Future<bool> _onWillPop() async {
@@ -248,7 +326,7 @@ class _SinglePageState extends State<SinglePage> {
                         ),
                         ElevatedButton.icon(
                           onPressed: () {
-                            // Navigate to the reading page logic
+                            _fetchEditionsAndPrint(book.key);
                           },
                           icon: Icon(Icons.book, color: Colors.black),
                           label: Text(
