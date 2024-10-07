@@ -2,6 +2,8 @@ import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:read_zone/components/navbar.dart'; // Import your Navbar
+import 'package:read_zone/theme.dart'; // Import your theme
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -32,7 +34,7 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _openAI = OpenAI.instance.build(
-      token: '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',
+      token: dotenv.env['OPENAI_API_KEY']!,
       baseOption: HttpSetup(
         receiveTimeout: const Duration(seconds: 5),
       ),
@@ -44,12 +46,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color.fromRGBO(
-          0,
-          166,
-          126,
-          1,
-        ),
+        backgroundColor: AppTheme.primaryColor,
         title: const Text(
           'GPT Chat',
           style: TextStyle(
@@ -57,23 +54,32 @@ class _ChatPageState extends State<ChatPage> {
           ),
         ),
       ),
-      body: DashChat(
-        currentUser: _user,
-        messageOptions: const MessageOptions(
-          currentUserContainerColor: Colors.black,
-          containerColor: Color.fromRGBO(
-            0,
-            166,
-            126,
-            1,
+      body: Column(
+        children: [
+          Expanded(
+            child: DashChat(
+              currentUser: _user,
+              messageOptions: const MessageOptions(
+                currentUserContainerColor: Colors.black,
+                containerColor: AppTheme.primaryColor,
+                textColor: Colors.white,
+              ),
+              onSend: (ChatMessage m) {
+                getChatResponse(m);
+              },
+              messages: _messages,
+              typingUsers: _typingUsers,
+            ),
           ),
-          textColor: Colors.white,
-        ),
-        onSend: (ChatMessage m) {
-          getChatResponse(m);
+        ],
+      ),
+      bottomNavigationBar: Navbar(
+        currentIndex: 3, // Set current index to 3 for the chat page
+        onTap: (index) {
+          setState(() {
+            // Handle navigation tap here if needed
+          });
         },
-        messages: _messages,
-        typingUsers: _typingUsers,
       ),
     );
   }
