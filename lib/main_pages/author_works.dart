@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:read_zone/main_pages/single_page.dart';
 import 'package:read_zone/theme.dart';
 import 'package:read_zone/components/navbar.dart';
+import '../models/author.dart';
+import '../models/book.dart';
 import '../services/book_service.dart';
 
 class AuthorWorksPage extends StatefulWidget {

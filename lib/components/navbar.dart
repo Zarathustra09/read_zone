@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:read_zone/main_pages/chat_page.dart'; // Import ChatPage
 import 'package:read_zone/main_pages/home_page.dart'; // Import HomePage
+import 'package:read_zone/main_pages/favorite_page.dart'; // Import FavoritePage
 
 class Navbar extends StatefulWidget {
   final int currentIndex;
@@ -55,6 +56,11 @@ class _NavbarState extends State<Navbar> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => ChatPage()),
+          );
+        } else if (index == 1) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => FavoritePage()),
           );
         } else {
           widget.onTap(index);

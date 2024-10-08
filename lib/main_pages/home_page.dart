@@ -3,6 +3,7 @@ import 'package:read_zone/main_pages/single_page.dart';
 import 'package:read_zone/services/auth_service.dart';
 import 'package:read_zone/services/book_service.dart';
 import '../components/navbar.dart';
+import '../models/book.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -29,6 +30,8 @@ class _HomePageState extends State<HomePage> {
       _isLoading = true;
     });
     try {
+      // Trim and replace spaces in the query
+      query = query.trim().replaceAll(' ', '');
       final books = await _bookService.fetchBooks(
           query, limit: _limit, offset: (_currentPage - 1) * _limit);
       if (mounted) {
@@ -103,7 +106,7 @@ class _HomePageState extends State<HomePage> {
               // Search Bar
               TextField(
                 decoration: InputDecoration(
-                  hintText: 'Search...',
+                  hintText: 'Search using Category...',
                   border: OutlineInputBorder(),
                 ),
                 onSubmitted: (value) {
@@ -126,9 +129,9 @@ class _HomePageState extends State<HomePage> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _buildCategoryCard('Fiction', Icons.book),
-                    _buildCategoryCard('Science', Icons.science),
-                    _buildCategoryCard('History', Icons.history),
+                    _buildCategoryCard('fiction', Icons.book),
+                    _buildCategoryCard('science', Icons.science),
+                    _buildCategoryCard('history', Icons.history),
                   ],
                 ),
               ),
@@ -172,18 +175,24 @@ class _HomePageState extends State<HomePage> {
   }
 
   // Helper function to build the category card
+  // Helper function to build the category card
   Widget _buildCategoryCard(String title, IconData icon) {
-    return Card(
-      color: Color(0xFFBFF6C3),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Icon(icon, size: 40, color: Colors.black),
-            SizedBox(height: 10),
-            Text(title, style: TextStyle(color: Colors.black)),
-          ],
+    return GestureDetector(
+      onTap: () {
+        _fetchBooks(title);
+      },
+      child: Card(
+        color: Color(0xFFBFF6C3),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Container(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Icon(icon, size: 40, color: Colors.black),
+              SizedBox(height: 10),
+              Text(title, style: TextStyle(color: Colors.black)),
+            ],
+          ),
         ),
       ),
     );
@@ -200,8 +209,6 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-
-  // lib/main_pages/home_page.dart
 
   Widget _buildBookTile(Book book) {
     return ListTile(

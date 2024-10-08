@@ -1,49 +1,17 @@
 // lib/main_pages/single_page.dart
 
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:read_zone/components/navbar.dart';
 import 'package:read_zone/main_pages/read_page.dart';
 import 'package:read_zone/theme.dart';
+import '../models/author.dart';
+import '../models/book.dart';
+import '../models/single_book.dart';
 import '../services/book_service.dart';
+import '../services/user_service.dart';
 import 'author_works.dart';
-
-class SinglePageBook {
-  final String key;
-  final String title;
-  final String author;
-  final String authorKey;
-  final String? coverUrl;
-  final String? description;
-
-  SinglePageBook({
-    required this.key,
-    required this.title,
-    required this.author,
-    required this.authorKey,
-    this.coverUrl,
-    this.description,
-  });
-
-  factory SinglePageBook.fromJson(Map<String, dynamic> json) {
-    String? coverUrl;
-    if (json['cover_id'] != null) {
-      coverUrl = 'https://covers.openlibrary.org/b/id/${json['cover_id']}-L.jpg';
-    } else if (json['covers'] != null && json['covers'].isNotEmpty) {
-      coverUrl = 'https://covers.openlibrary.org/b/id/${json['covers'][0]}-L.jpg';
-    }
-
-    return SinglePageBook(
-      key: json['key'] ?? 'No Key',
-      title: json['title'] ?? 'No Title',
-      author: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['author']['key'] ?? 'Unknown Author' : 'Unknown Author',
-      authorKey: (json['authors'] != null && json['authors'].isNotEmpty) ? json['authors'][0]['author']['key'] ?? 'Unknown Author' : 'Unknown Author',
-      coverUrl: coverUrl,
-      description: json['description'] is Map ? json['description']['value'] : json['description'] ?? 'No description available',
-    );
-  }
-}
+import 'package:http/http.dart' as http;
 
 class SinglePage extends StatefulWidget {
   final String bookKey;
@@ -57,12 +25,22 @@ class SinglePage extends StatefulWidget {
 class _SinglePageState extends State<SinglePage> {
   late Future<SinglePageBook> _bookFuture;
   Future<Author>? _authorFuture;
+  final UserService _userService = UserService();
+  bool _isFavorite = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    print('Fetching book with key: ${widget.bookKey}');
     _bookFuture = _fetchBookByKey(widget.bookKey);
+    _checkIfFavorite();
+  }
+
+  Future<void> _checkIfFavorite() async {
+    final isFavorite = await _userService.isBookInFavorites(widget.bookKey);
+    setState(() {
+      _isFavorite = isFavorite;
+    });
   }
 
   Future<SinglePageBook> _fetchBookByKey(String key) async {
@@ -71,11 +49,7 @@ class _SinglePageState extends State<SinglePage> {
       'User-Agent': 'read_zone/1.0 (joshua.pardo30@gmail.com)',
     };
     final uri = Uri.parse(url);
-    print('Fetching book from URL: $url');
     final response = await http.get(uri, headers: headers);
-
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
@@ -86,13 +60,16 @@ class _SinglePageState extends State<SinglePage> {
   }
 
   Future<void> _fetchEditionsAndPrint(String key) async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       final editions = await fetchEditionsByKey(key);
       if (editions.isNotEmpty) {
         final lastEdition = editions.last;
         String? validIsbn;
 
-        // Check for valid ISBN-10
         if (lastEdition.isbn10 != null) {
           for (var isbn in lastEdition.isbn10!.reversed) {
             if (isbn.isNotEmpty) {
@@ -102,7 +79,6 @@ class _SinglePageState extends State<SinglePage> {
           }
         }
 
-        // If no valid ISBN-10, check for valid ISBN-13
         if (validIsbn == null && lastEdition.isbn13 != null) {
           for (var isbn in lastEdition.isbn13!.reversed) {
             if (isbn.isNotEmpty) {
@@ -125,14 +101,14 @@ class _SinglePageState extends State<SinglePage> {
               ),
             );
           }
-        } else {
-          print('No valid ISBN-10 or ISBN-13 found for the last edition');
         }
-      } else {
-        print('No editions found');
       }
     } catch (e) {
       print('Error fetching editions: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -142,29 +118,20 @@ class _SinglePageState extends State<SinglePage> {
       'User-Agent': 'read_zone/1.0 (joshua.pardo30@gmail.com)',
     };
     final uri = Uri.parse(url);
-    print('Fetching book details from URL: $url');
     final response = await http.get(uri, headers: headers);
-
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
       if (data.containsKey('items') && data['items'].isNotEmpty) {
         final itemUrl = data['items'][0]['itemURL'];
-        print('Item URL: $itemUrl');
         return itemUrl;
-      } else {
-        print('No items found in the response');
       }
-    } else {
-      print('Failed to load book details');
     }
     return null;
   }
 
   Future<bool> _onWillPop() async {
-    return true; // Return true to allow the back navigation
+    return true;
   }
 
   @override
@@ -183,19 +150,14 @@ class _SinglePageState extends State<SinglePage> {
         body: FutureBuilder<SinglePageBook>(
           future: _bookFuture,
           builder: (context, snapshot) {
-            print('FutureBuilder state: ${snapshot.connectionState}');
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
-              print('Error: ${snapshot.error}');
               return Center(child: Text('Error: ${snapshot.error}'));
             } else if (!snapshot.hasData) {
-              print('No data available');
               return Center(child: Text('No data available'));
             } else {
               final book = snapshot.data!;
-              print('Book loaded: ${book.title}');
-              print('Author Key: ${book.authorKey}'); // Print the author key
               if (book.authorKey != 'Unknown Author') {
                 _authorFuture = BookService().fetchAuthorByKey(book.authorKey);
               }
@@ -204,7 +166,6 @@ class _SinglePageState extends State<SinglePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Book Cover
                     Center(
                       child: Container(
                         width: 150,
@@ -219,8 +180,6 @@ class _SinglePageState extends State<SinglePage> {
                       ),
                     ),
                     SizedBox(height: 20),
-
-                    // Book Title
                     Text(
                       book.title,
                       style: TextStyle(
@@ -230,15 +189,13 @@ class _SinglePageState extends State<SinglePage> {
                       ),
                     ),
                     SizedBox(height: 10),
-
-                    // Book Author
                     _authorFuture != null
                         ? FutureBuilder<Author>(
                       future: _authorFuture,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return Text(
-                            'by Loading...',
+                            'Loading...',
                             style: TextStyle(
                               fontSize: 18,
                               color: Colors.black54,
@@ -246,7 +203,7 @@ class _SinglePageState extends State<SinglePage> {
                           );
                         } else if (snapshot.hasError) {
                           return Text(
-                            'by Unknown Author',
+                            'Unknown Author',
                             style: TextStyle(
                               fontSize: 18,
                               color: Colors.black54,
@@ -254,7 +211,7 @@ class _SinglePageState extends State<SinglePage> {
                           );
                         } else if (!snapshot.hasData) {
                           return Text(
-                            'by Unknown Author',
+                            'Unknown Author',
                             style: TextStyle(
                               fontSize: 18,
                               color: Colors.black54,
@@ -262,22 +219,11 @@ class _SinglePageState extends State<SinglePage> {
                           );
                         } else {
                           final author = snapshot.data!;
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AuthorWorksPage(authorKey: author.key),
-                                ),
-                              );
-                            },
-                            child: Text(
-                              'by ${author.name}',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.black54,
-                                decoration: TextDecoration.underline,
-                              ),
+                          return Text(
+                            'by ${author.name}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black54,
                             ),
                           );
                         }
@@ -291,8 +237,6 @@ class _SinglePageState extends State<SinglePage> {
                       ),
                     ),
                     SizedBox(height: 20),
-
-                    // Book Description
                     Expanded(
                       child: SingleChildScrollView(
                         child: Text(
@@ -305,18 +249,32 @@ class _SinglePageState extends State<SinglePage> {
                       ),
                     ),
                     SizedBox(height: 20),
-
-                    // Action buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         ElevatedButton.icon(
-                          onPressed: () {
-                            // Save to favorites logic
+                          onPressed: () async {
+                            if (_isFavorite) {
+                              await _userService.unfavoriteBook(widget.bookKey);
+                            } else {
+                              final book = await _bookFuture;
+                              await _userService.saveBookToFavorites(Book(
+                                key: book.key,
+                                title: book.title,
+                                author: book.author,
+                                authorKey: book.authorKey,
+                                coverUrl: book.coverUrl,
+                                description: book.description,
+                              ));
+                            }
+                            _checkIfFavorite();
                           },
-                          icon: Icon(Icons.favorite_border, color: Colors.black),
+                          icon: Icon(
+                            _isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: Colors.black,
+                          ),
                           label: Text(
-                            'Save to Favorites',
+                            _isFavorite ? 'Remove from Favorites' : 'Save to Favorites',
                             style: TextStyle(color: Colors.black),
                           ),
                           style: ElevatedButton.styleFrom(
@@ -325,10 +283,16 @@ class _SinglePageState extends State<SinglePage> {
                           ),
                         ),
                         ElevatedButton.icon(
-                          onPressed: () {
-                            _fetchEditionsAndPrint(book.key);
+                          onPressed: _isLoading
+                              ? null
+                              : () {
+                            _fetchEditionsAndPrint(widget.bookKey);
                           },
-                          icon: Icon(Icons.book, color: Colors.black),
+                          icon: _isLoading
+                              ? CircularProgressIndicator(
+                            color: Colors.black,
+                          )
+                              : Icon(Icons.book, color: Colors.black),
                           label: Text(
                             'Read Now',
                             style: TextStyle(color: Colors.black),
