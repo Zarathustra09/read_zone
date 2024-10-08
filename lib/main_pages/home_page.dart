@@ -86,14 +86,6 @@ class _HomePageState extends State<HomePage> {
         ),
         backgroundColor: Color(0xFFE0FBE2),
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout, color: Colors.black),
-            onPressed: () {
-              _authService.signout(context);
-            },
-          ),
-        ],
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
@@ -174,7 +166,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Helper function to build the category card
   // Helper function to build the category card
   Widget _buildCategoryCard(String title, IconData icon) {
     return GestureDetector(

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:read_zone/main_pages/home_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../auth/login_page.dart';
 
@@ -21,6 +22,12 @@ class AuthService{
 
       // Save the username to the user's profile
       await userCredential.user!.updateDisplayName(username);
+
+      // Save the username to Firestore
+      await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+        'username': username,
+        'email': email,
+      });
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacement(
@@ -95,7 +102,12 @@ class AuthService{
       print('Error: $e');
     }
   }
-
-
-
+  Future<void> resetPassword(String email) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      print('Password reset email sent');
+    } on FirebaseAuthException catch (e) {
+      print('Error: $e');
+    }
+  }
 }

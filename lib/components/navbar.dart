@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:read_zone/main_pages/chat_page.dart'; // Import ChatPage
-import 'package:read_zone/main_pages/home_page.dart'; // Import HomePage
-import 'package:read_zone/main_pages/favorite_page.dart'; // Import FavoritePage
-import 'package:read_zone/main_pages/search_page.dart'; // Import SearchPage
+import 'package:read_zone/main_pages/chat_page.dart';
+import 'package:read_zone/main_pages/home_page.dart';
+import 'package:read_zone/main_pages/favorite_page.dart';
+import 'package:read_zone/main_pages/search_page.dart';
+import 'package:read_zone/main_pages/profile_page.dart'; // Import ProfilePage
 
 class Navbar extends StatefulWidget {
   final int currentIndex;
@@ -45,7 +46,7 @@ class _NavbarState extends State<Navbar> {
         ),
       ],
       currentIndex: widget.currentIndex,
-      selectedItemColor: Color(0xFFACE1AF), // Primary color from your palette
+      selectedItemColor: Color(0xFFACE1AF),
       unselectedItemColor: Colors.grey,
       onTap: (index) {
         if (index == 0) {
@@ -67,6 +68,11 @@ class _NavbarState extends State<Navbar> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => ChatPage()),
+          );
+        } else if (index == 4) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ProfilePage()),
           );
         } else {
           widget.onTap(index);
