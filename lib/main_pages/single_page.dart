@@ -100,8 +100,14 @@ class _SinglePageState extends State<SinglePage> {
                 ),
               ),
             );
+          } else {
+            _showMessage("The book is not available");
           }
+        } else {
+          _showMessage("The book is not available");
         }
+      } else {
+        _showMessage("The book is not available");
       }
     } catch (e) {
       print('Error fetching editions: $e');
@@ -110,6 +116,15 @@ class _SinglePageState extends State<SinglePage> {
         _isLoading = false;
       });
     }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   Future<String?> fetchBookDetailsByISBN(String isbn) async {

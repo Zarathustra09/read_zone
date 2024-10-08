@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:read_zone/main_pages/chat_page.dart'; // Import ChatPage
 import 'package:read_zone/main_pages/home_page.dart'; // Import HomePage
 import 'package:read_zone/main_pages/favorite_page.dart'; // Import FavoritePage
+import 'package:read_zone/main_pages/search_page.dart'; // Import SearchPage
 
 class Navbar extends StatefulWidget {
   final int currentIndex;
@@ -47,7 +48,17 @@ class _NavbarState extends State<Navbar> {
       selectedItemColor: Color(0xFFACE1AF), // Primary color from your palette
       unselectedItemColor: Colors.grey,
       onTap: (index) {
-        if (index == 2) {
+        if (index == 0) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => SearchPage()),
+          );
+        } else if (index == 1) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => FavoritePage()),
+          );
+        } else if (index == 2) {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => HomePage()),
@@ -56,11 +67,6 @@ class _NavbarState extends State<Navbar> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => ChatPage()),
-          );
-        } else if (index == 1) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => FavoritePage()),
           );
         } else {
           widget.onTap(index);

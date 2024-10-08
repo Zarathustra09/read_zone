@@ -118,5 +118,38 @@ Future<List<Edition>> fetchEditionsByKey(String key) async {
   } else {
     throw Exception('Failed to load editions');
   }
+
+
+
 }
 
+Future<List<Book>> fetchSearchResults(String query, {int limit = 5, int offset = 0}) async {
+  final String url = 'https://openlibrary.org/search.json?q=${Uri.encodeComponent(query)}&limit=$limit&offset=$offset';
+  final response = await http.get(Uri.parse(url));
+
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> data = json.decode(response.body);
+    final List<dynamic> docs = data['docs'];
+    List<Book> books = [];
+
+    for (var doc in docs) {
+      String authorKey = doc['author_key'][0];
+      String authorName = doc['author_name'][0];
+      String coverUrl = doc['cover_i'] != null
+          ? 'https://covers.openlibrary.org/b/id/${doc['cover_i']}-L.jpg'
+          : '';
+
+      books.add(Book(
+        key: doc['key'],
+        title: doc['title'],
+        author: authorName,
+        authorKey: authorKey,
+        coverUrl: coverUrl,
+      ));
+    }
+
+    return books;
+  } else {
+    throw Exception('Failed to load search results');
+  }
+}
